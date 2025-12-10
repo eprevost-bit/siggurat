@@ -15,7 +15,7 @@
 <!--        </record>-->
 
         <record id="action_report_account_move_siggurat" model="ir.actions.report">
-            <field name="name">Factura Siggurat</field>
+            <field name="name">Factura Ziggurat</field>
             <field name="model">account.move</field>
             <field name="report_type">qweb-pdf</field>
 
