@@ -37,14 +37,7 @@
                                     </div>
                                 </div>
                             </div>
-                        </div>
-                        <div class="page" style="padding: 0px 35px 0px 35px; top:0px">
-                            <t t-set="doc" t-value="doc.with_context(lang=doc.partner_id.lang)"/>
-                            <t t-set="forced_vat" t-value="doc.fiscal_position_id.foreign_vat"/>
-
-                            <div style="font-family: Arial, Helvetica, sans-serif; font-size: 14px; width: 100%;">
-
-                                <div class="row mb-3">
+                            <div class="row mb-2" style="margin-top: 7px;">
                                     <div class="col-6">
                                         <div style="margin-bottom: 10px;">
                                             <strong style="font-size: 15px;">Fecha de Factura</strong><br/>
@@ -69,6 +62,12 @@
                                         </div>
                                     </div>
                                 </div>
+                        </div>
+                        <div class="page" style="padding: 0px 35px 0px 35px; top:0px">
+                            <t t-set="doc" t-value="doc.with_context(lang=doc.partner_id.lang)"/>
+                            <t t-set="forced_vat" t-value="doc.fiscal_position_id.foreign_vat"/>
+
+                            <div style="font-family: Arial, Helvetica, sans-serif; font-size: 14px; width: 100%;">
 
                                 <div class="row"
                                      style="background-color: #d93025; color: white; padding: 5px 15px; font-weight: bold; margin-bottom: 5px;">
@@ -337,13 +336,12 @@
 
 
                         </div>
-                        <div class="footer"
-                             style="padding: 20px 35px 20px 35px; width: 100%; border-top: 2px solid #ff2100; margin-top: 20px; font-family: 'Times New Roman', Times, serif; color: #ff2100; font-size: 14px; font-weight: bold;">
+                        <div class="footer align-items-center"
+                             style="padding: 60px 35px 60px 35px; width: 100%; margin-top: 20px; font-family: 'Times New Roman', Times, serif; font-size: 8px;">
 
-                            <div class="row d-flex align-items-center">
-                                    <p>ZIGGURAT LANGUAGE SERVICES, S.L. Sociedad Limitada inscrita en el R.M. de Barcelona, tomo 37386, folio 139, hoja nº B297009, inscripción 1ª, CIF: B63781926</p>
 
-                            </div>
+                                    <p style="margin-left: 50px;">ZIGGURAT LANGUAGE SERVICES, S.L. Sociedad Limitada inscrita en el R.M. de Barcelona, tomo 37386, folio 139, hoja nº B297009, inscripción 1ª, CIF: B63781926</p>
+
 
                             <!--                            <div class="text-center" style="margin-top: 15px; font-size: 12px; color: #888888; font-weight: normal;">-->
                             <!--                                Página <span class="page"/> / <span class="topage"/>-->
