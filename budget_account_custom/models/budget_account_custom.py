@@ -25,7 +25,7 @@ class BudgetReport(models.Model):
                    NULL AS user_id,
 
                    /* AQUI AÑADIMOS LA CUENTA (Usando bl.x_studio_cuenta) */
-                   bl.x_studio_cuenta AS general_account_id,
+                   bl.account_plan_id AS general_account_id,
 
                    'budget' AS line_type,
                    bl.budget_amount AS budget,
@@ -129,7 +129,7 @@ class BudgetReport(models.Model):
                    pol.company_id AS company_id,
                    po.user_id AS user_id,
                    
-                   bl.x_studio_cuenta AS general_account_id, 
+                   bl.account_plan_id AS general_account_id, 
 
                    'committed' AS line_type,
                    0 AS budget,
