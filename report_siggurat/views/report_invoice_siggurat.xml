@@ -69,10 +69,35 @@
 
                             <div style="font-family: Arial, Helvetica, sans-serif; font-size: 14px; width: 100%;">
                                 <div class="row"
-                                     style="background-color: #d93025; color: white; padding: 5px 15px; font-weight: bold; margin-bottom: 5px;">
-                                    <div class="col-6">ID Cliente</div>
-                                    <div class="col-6 text-end">NIF/CIF</div>
+                                     style="background-color:#d93025; color:white; font-weight:bold; margin-bottom:5px; padding:0 8px;">
+                                           <!-- Simular las columnas de la segunda franja roja para alineación -->
+                                    <!-- Concepto -->
+                                    <div class="col-4" style="padding:5px 0;">
+                                        ID Cliente
+                                    </div>
+
+                                    <!-- Cantidad -->
+                                    <div class="col-1"></div>
+
+                                    <!-- Tarifa -->
+                                    <div class="col-1"></div>
+
+                                    <!-- Importe -->
+                                    <div class="col-2"></div>
+
+                                    <!-- Dto -->
+                                    <div class="col-1"></div>
+
+                                    <!-- IVA -->
+                                    <div class="col-1"></div>
+
+                                    <!-- Total -->
+                                    <div class="col-2 text-end" style="padding:5px 0;">
+                                        NIF/CIF
+                                    </div>
+
                                 </div>
+
 
                                 <div class="row">
                                     <div class="col-8">
@@ -114,10 +139,13 @@
                                             style="padding: 8px; vertical-align: middle; color: white; font-weight: bold;">
                                             Dto
                                         </th>
-                                        <th name="th_taxes" class="text-end"
-                                            style="padding: 8px; vertical-align: middle; color: white; font-weight: bold;">
+                                        <th name="th_taxes"
+                                            class="text-center"
+                                            style="padding: 4px 6px; vertical-align: middle; color: white; font-weight: bold; width: 11%;">
                                             IVA
                                         </th>
+
+
                                         <th name="th_total" class="text-end"
                                             style="padding: 8px; vertical-align: middle; border-radius: 0px; color: white; font-weight: bold;">
                                             Total
@@ -161,10 +189,11 @@
                                                     <span t-field="line.discount"/> <span t-if="line.discount">%</span>
                                                 </td>
 
-                                                <td class="text-end">
-                                                    <span t-out="', '.join(map(lambda x: (x.name), line.tax_ids))"
-                                                          id="line_tax_ids"/>
+                                                <td class="text-center"
+                                                    style="padding: 4px 6px; white-space: normal; word-break: break-word;">
+                                                    <span t-out="', '.join(map(lambda x: (x.name), line.tax_ids))"/>
                                                 </td>
+
 
                                                 <td class="text-end">
                                                     <span t-field="line.price_total"
@@ -203,6 +232,7 @@
                                 </tbody>
                             </table>
                             <div>
+                                <div style="width: 100%; border-top: 3px solid #d93025; margin: 20px 0;"></div>
                                 <div id="right-elements"
                                      t-attf-class="#{'col-5' if report_type != 'html' else 'col-12 col-md-5'} ms-5 d-inline-block float-end">
                                     <div id="total" class="clearfix row mt-n3">
@@ -284,46 +314,54 @@
                                         <span id="payment_terms_note_id" t-if="doc.invoice_payment_term_id.note"
                                               t-field="doc.invoice_payment_term_id.note" name="payment_term">Payment
                                             within 30 calendar day</span><br/>
-                                        <t t-if="doc.invoice_payment_term_id.display_on_invoice and payment_term_details">
-                                            <div t-if="doc.show_payment_term_details"
-                                                 id="total_payment_term_details_table" class="row">
-                                                <div t-attf-class="#{'col-10' if report_type != 'html' else 'col-sm-10 col-md-9'}">
-                                                    <t t-if="doc._is_eligible_for_early_payment_discount(doc.currency_id,doc.invoice_date)">
-                                                        <td>
-                                                            <span t-options="{&quot;widget&quot;: &quot;monetary&quot;, &quot;display_currency&quot;: doc.currency_id}"
-                                                                  t-out="doc.invoice_payment_term_id._get_amount_due_after_discount(doc.amount_total, doc.amount_tax)">
-                                                                30.00</span> due if paid before
-                                                            <span t-out="doc.invoice_payment_term_id._get_last_discount_date_formatted(doc.invoice_date)">
-                                                                2024-01-01</span>
-                                                        </td>
+
+                                        <!--Para agregar fecha de vencimiento -->
+                                        <t t-if="payment_term_details">
+                                            <div class="mt-2" style="font-size: 12px;">
+                                                <strong>Fechas de vencimiento:</strong>
+                                                <ul style="padding-left: 15px; margin-top: 5px;">
+                                                    <t t-foreach="payment_term_details" t-as="term">
+                                                        <li>
+                                                            <span t-out="term.get('amount')"
+                                                                  t-options="{'widget': 'monetary', 'display_currency': doc.currency_id}"/>
+                                                            —
+                                                            <span t-out="term.get('date')"/>
+                                                        </li>
                                                     </t>
-                                                    <t t-if="len(payment_term_details) &gt; 1"
-                                                       t-foreach="payment_term_details" t-as="term">
-                                                        <div>
-                                                            <span t-out="term_index + 1">1</span> - Installment of
-                                                            <t t-options="{&quot;widget&quot;: &quot;monetary&quot;, &quot;display_currency&quot;: doc.currency_id}"
-                                                               t-out="term.get('amount')" class="text-end">31.05</t>
-                                                            <span> due on </span>
-                                                            <t t-out="term.get('date')" class="text-start">
-                                                                2024-01-01</t>
-                                                        </div>
-                                                    </t>
-                                                </div>
+                                                </ul>
                                             </div>
                                         </t>
-                                    </div>
-                                    <div class="mb-3"
-                                         t-if="doc.move_type in ('out_invoice', 'in_refund') and doc.payment_reference">
-                                        <p name="payment_communication">
-                                            Payment Communication: <span class="fw-bold"
-                                                                         t-field="doc.payment_reference">
-                                            INV/2023/00001</span>
-                                            <t t-if="doc.partner_bank_id">
-                                                <br/> on this account: <span t-field="doc.partner_bank_id"
-                                                                             class="fw-bold"/>
+
+                                        <t t-if="False">
+                                            <t t-if="doc.invoice_payment_term_id.display_on_invoice and payment_term_details">
+                                                <div t-if="doc.show_payment_term_details"
+                                                     id="total_payment_term_details_table" class="row">
+                                                    <div t-attf-class="#{'col-10' if report_type != 'html' else 'col-sm-10 col-md-9'}">
+                                                        <t t-if="doc._is_eligible_for_early_payment_discount(doc.currency_id,doc.invoice_date)">
+                                                            <div>
+                                                                <span t-options="{'widget':'monetary','display_currency':doc.currency_id}"
+                                                                      t-out="doc.invoice_payment_term_id._get_amount_due_after_discount(doc.amount_total, doc.amount_tax)"/>
+                                                                due if paid before
+                                                                <span t-out="doc.invoice_payment_term_id._get_last_discount_date_formatted(doc.invoice_date)"/>
+                                                            </div>
+                                                        </t>
+                                                        <t t-if="len(payment_term_details) &gt; 1"
+                                                           t-foreach="payment_term_details" t-as="term">
+                                                            <div>
+                                                                <span t-out="term_index + 1"/> -
+                                                                <t t-out="term.get('amount')"
+                                                                   t-options="{'widget':'monetary','display_currency':doc.currency_id}"/>
+                                                                due on
+                                                                <t t-out="term.get('date')"/>
+                                                            </div>
+                                                        </t>
+                                                    </div>
+                                                </div>
                                             </t>
-                                        </p>
+                                        </t>
+
                                     </div>
+
                                     <t t-set="show_qr" t-value="doc.display_qr_code and doc.amount_residual &gt; 0"/>
                                     <div t-if="not show_qr" name="qr_code_placeholder" class="oe_structure"/>
                                     <div id="qrcode" class="d-flex mb-3 avoid-page-break-inside" t-else="">
