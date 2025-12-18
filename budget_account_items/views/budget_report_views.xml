@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_account_report_budget_form_inherit" model="ir.ui.view">
+        <field name="name">account.report.budget.form.inherit</field>
+        <field name="model">account.report.budget</field>
+        <field name="inherit_id" ref="account_reports.account_report_budget_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='item_ids']/list/field[@name='account_id']" position="after">
+                <field name="last_year_balance" readonly="1" force_save="1" decoration-info="1"/>
+                <field name="percentage_adj" widget="percentage" string="% Adj."/>
+            </xpath>
+
+            <xpath expr="//field[@name='item_ids']/list/field[@name='amount']" position="attributes">
+                <attribute name="decoration-bf">1</attribute>
+            </xpath>
+        </field>
+    </record>
+</odoo>
