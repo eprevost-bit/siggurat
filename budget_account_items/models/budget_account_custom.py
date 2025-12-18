@@ -33,11 +33,11 @@ class AccountReportBudgetItem(models.Model):
                 )
 
                 balance = aml_data[0]['balance'] if aml_data else 0.0
-                record.last_year_balance = balance
+                record.last_year_balance = -1 * balance
 
                 # Aplicamos la fórmula: Cantidad anterior + (Cantidad anterior * %)
                 # Usamos / 100.0 para que si el usuario pone "10", sea el 10%
                 increment = balance * (record.percentage_adj / 100.0)
-                record.amount = -1 * (balance + increment)
+                record.amount = balance + increment
             else:
                 record.last_year_balance = 0.0
