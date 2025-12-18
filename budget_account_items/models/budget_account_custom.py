@@ -38,6 +38,6 @@ class AccountReportBudgetItem(models.Model):
                 # Aplicamos la fórmula: Cantidad anterior + (Cantidad anterior * %)
                 # Usamos / 100.0 para que si el usuario pone "10", sea el 10%
                 increment = balance * (record.percentage_adj / 100.0)
-                record.amount = -(balance + increment)
+                record.amount = -1 * (balance + increment)
             else:
                 record.last_year_balance = 0.0
