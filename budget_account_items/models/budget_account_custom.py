@@ -1,5 +1,5 @@
 from odoo import models, fields, api
-from dateutil.relativedelta import relativedelta
+from datetime import date
 
 
 class AccountReportBudgetItem(models.Model):
@@ -16,28 +16,37 @@ class AccountReportBudgetItem(models.Model):
     def _compute_budget_logic(self):
         for record in self:
             if record.account_id and record.date:
-                # Calculamos el rango de fechas del año anterior
-                prev_year_date = record.date - relativedelta(years=1)
-                date_from = prev_year_date.replace(day=1)
-                date_to = prev_year_date + relativedelta(day=31)
+                # 1. Obtener el año anterior completo
+                # Si el presupuesto es de 2025, buscamos todo el 2024
+                last_year = record.date.year - 1
+                date_from = date(last_year, 1, 1)
+                date_to = date(last_year, 12, 31)
 
-                # Buscamos los apuntes contables (account.move.line) de ese periodo
+                # 2. Buscamos todos los apuntes del año completo
                 domain = [
                     ('account_id', '=', record.account_id.id),
                     ('date', '>=', date_from),
                     ('date', '<=', date_to),
                     ('move_id.state', '=', 'posted')
                 ]
+
+                # Sumamos el campo 'balance' (débito - crédito)
                 aml_data = self.env['account.move.line'].read_group(
                     domain, ['balance'], ['account_id']
                 )
 
-                balance = aml_data[0]['balance'] if aml_data else 0.0
-                record.last_year_balance = -1 * balance
+                # 3. Tratamiento del Saldo
+                # En Odoo, las cuentas de ingresos (como la 700 de tu foto) tienen saldo negativo.
+                # Multiplicamos por -1 para que en el presupuesto aparezca como valor positivo.
+                raw_balance = aml_data[0]['balance'] if aml_data else 0.0
 
-                # Aplicamos la fórmula: Cantidad anterior + (Cantidad anterior * %)
-                # Usamos / 100.0 para que si el usuario pone "10", sea el 10%
-                increment = balance * (record.percentage_adj / 100.0)
-                record.amount = -1*(balance + increment)
+                # Invertimos el signo para que coincida con la lógica de presupuesto (Ingresos = Positivo)
+                total_last_year = -1 * raw_balance
+                record.last_year_balance = total_last_year
+
+                # 4. Cálculo del nuevo importe: Saldo Anterior + (Saldo Anterior * %)
+                increment = total_last_year * (record.percentage_adj / 100.0)
+                record.amount = total_last_year + increment
             else:
                 record.last_year_balance = 0.0
+                record.amount = 0.0
