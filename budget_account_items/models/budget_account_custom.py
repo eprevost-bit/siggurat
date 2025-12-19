@@ -17,7 +17,7 @@ class AccountReportBudgetItem(models.Model):
         for record in self:
             if record.account_id and record.date:
                 # 1. Obtener el año anterior completo
-                # Si el presupuesto es de 2025, buscamos todo el 2024
+
                 last_year = record.date.year - 1
                 date_from = date(last_year, 1, 1)
                 date_to = date(last_year, 12, 31)
