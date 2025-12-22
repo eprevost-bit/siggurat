@@ -3,7 +3,7 @@
 from odoo import _,api, fields, models
 
 class AccountComitionist(models.Model):
-    _name = 'account.comitionist'
+    _inherit = 'account.move'
     _description = 'Añadimos un campo comisionista para el reporte dee comisionista'
 
     
