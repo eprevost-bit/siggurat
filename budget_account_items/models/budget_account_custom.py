@@ -61,6 +61,7 @@ class AccountReportBudgetItem(models.Model):
                 record.last_year_balance = 0.0
                 record.amount = 0.0
 
+    @api.depends('amount')
     def _inverse_amount(self):
         """
         Esta función se ejecuta cuando el usuario escribe manualmente en 'amount'.
