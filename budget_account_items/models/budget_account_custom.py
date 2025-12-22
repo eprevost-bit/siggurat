@@ -16,7 +16,6 @@ class AccountReportBudgetItem(models.Model):
     amount = fields.Float(
         string="Importe",
         compute="_compute_budget_logic",
-        inverse="_inverse_amount",
         store=True,
         readonly=False  # Permite edición manual si lo prefieres
     )
