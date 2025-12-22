@@ -61,19 +61,11 @@ class AccountReportBudgetItem(models.Model):
                 record.last_year_balance = 0.0
                 record.amount = 0.0
 
-    @api.depends('amount')
-    def _inverse_amount(self):
-        """
-        Esta función se ejecuta cuando el usuario escribe manualmente en 'amount'.
-        Calcula el porcentaje basado en el nuevo monto.
-        """
-        for record in self:
-            if record.last_year_balance and record.last_year_balance != 0:
-                # Fórmula: ((Monto Nuevo / Saldo Anterior) - 1)
-                # Ejemplo: (1230 / 820) - 1  => 1.5 - 1 = 0.5 (que es 50%)
-                record.percentage_adj = (record.amount / record.last_year_balance) - 1
-            else:
-                record.percentage_adj = 0.0
+    @api.onchange('amount')
+    def _onchange_amount(self):
+        if self.last_year_balance and self.last_year_balance != 0:
+            # (1230 / 820) - 1 = 0.5 (50%)
+            self.percentage_adj = (self.amount / self.last_year_balance) - 1
 
 # from odoo import models, fields, api
 # from datetime import date
