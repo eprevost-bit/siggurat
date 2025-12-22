@@ -12,7 +12,7 @@
 
             <xpath expr="//field[@name='item_ids']/list/field[@name='account_id']" position="after">
                 <field name="last_year_balance"
-                       string="Saldo Ant."
+                       string="Saldo Año Anterior."
                        readonly="1"
                        force_save="1"
                        optional="show"
