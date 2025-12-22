@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
     <record id="action_marcar_como_comisionista_masivo" model="ir.actions.server">
-        <field name="name">Marcar como Pagado (Comisionista)</field>
+        <field name="name">Marcar Comisión Pagada</field>
         <field name="model_id" ref="account.model_account_move"/>
         <field name="binding_model_id" ref="account.model_account_move"/>
         <field name="binding_view_types">list</field>

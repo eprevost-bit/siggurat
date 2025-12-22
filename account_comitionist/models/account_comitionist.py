@@ -7,7 +7,7 @@ class AccountComitionist(models.Model):
     _description = 'Añadimos un campo comisionista para el reporte dee comisionista'
 
     
-    comisionista = fields.Boolean(string='Comisionista', help='Indica si pago la comisión de la factura')
+    comisionista = fields.Boolean(string='Comisión Pagada', help='Indica si pago la comisión de la factura')
 
     def action_marcar_comisionista_true(self):
         """Función para el botón: marca como True los registros seleccionados"""
