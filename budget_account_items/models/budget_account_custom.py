@@ -48,7 +48,10 @@ class AccountReportBudgetItem(models.Model):
                 # Odoo devuelve saldo negativo para ingresos.
                 # Si quieres que ingresos sean positivos, asegúrate de la lógica de signo:
                 raw_balance = aml_data[0]['balance'] if aml_data else 0.0
-                record.last_year_balance = raw_balance
+
+                # Para presupuestos de ingresos, solemos invertir el signo
+                total_last_year = raw_balance
+                record.last_year_balance = total_last_year
 
                 # 4. Cálculo del nuevo importe (El "Doble" si es 100%)
                 # Si percentage_adj es 100, la fórmula es: 8214 * (1 + 100/100) = 8214 * 2
