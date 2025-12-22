@@ -53,10 +53,9 @@ class AccountReportBudgetItem(models.Model):
                 total_last_year = raw_balance
                 record.last_year_balance = total_last_year
 
-                # 4. Cálculo del nuevo importe (El "Doble" si es 100%)
-                # Si percentage_adj es 100, la fórmula es: 8214 * (1 + 100/100) = 8214 * 2
-                factor = 1 + (record.percentage_adj / 100.0)
-                record.amount = total_last_year * factor
+                incremento = total_last_year * record.percentage_adj
+                record.amount = total_last_year + incremento
+
             else:
                 record.last_year_balance = 0.0
                 record.amount = 0.0
