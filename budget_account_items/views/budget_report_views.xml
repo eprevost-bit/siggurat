@@ -30,7 +30,6 @@
                 <attribute name="string">Importe</attribute>
                 <attribute name="decoration-bf">1</attribute>
                 <attribute name="force_save">1</attribute>
-                <attribute name="width=">100%</attribute>
 
             </xpath>
 
