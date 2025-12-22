@@ -16,11 +16,13 @@
                        readonly="1"
                        force_save="1"
                        optional="show"
+                       width="100%"
                        decoration-info="1"/>
 
                 <field name="percentage_adj"
                        widget="percentage"
                        string="% VAR"
+                       width="100%"
                        optional="show"/>
             </xpath>
 
@@ -28,6 +30,8 @@
                 <attribute name="string">Importe</attribute>
                 <attribute name="decoration-bf">1</attribute>
                 <attribute name="force_save">1</attribute>
+                <attribute name="width=">100%</attribute>
+
             </xpath>
 
         </field>
