@@ -8,25 +8,30 @@ class AccountReportBudgetItem(models.Model):
     last_year_balance = fields.Float(
         string="Saldo Año Anterior",
         compute="_compute_budget_logic",
-        store=True
+        store=True,
+        digits=(16, 2)
     )
 
-    # Asegúrate de que este nombre coincide con el de tu vista XML
-    percentage_adj = fields.Float(string="% Incremento")
+    # Redefinimos amount para que dependa de nuestra lógica
+    amount = fields.Float(
+        string="Importe",
+        compute="_compute_budget_logic",
+        store=True,
+        readonly=False  # Permite edición manual si lo prefieres
+    )
 
-    # Redefinimos amount para que Odoo sepa que ahora es computado por nuestra función
-    amount = fields.Float(compute="_compute_budget_logic", store=True, readonly=False)
+    percentage_adj = fields.Float(string="% Incremento", default=0.0)
 
     @api.depends('account_id', 'date', 'percentage_adj')
     def _compute_budget_logic(self):
         for record in self:
             if record.account_id and record.date:
-                # 1. Obtener el año anterior completo
+                # 1. Obtener el rango del año anterior
                 last_year = record.date.year - 1
                 date_from = date(last_year, 1, 1)
                 date_to = date(last_year, 12, 31)
 
-                # 2. Buscamos todos los apuntes del año completo
+                # 2. Búsqueda de apuntes contables
                 domain = [
                     ('account_id', '=', record.account_id.id),
                     ('date', '>=', date_from),
@@ -34,28 +39,25 @@ class AccountReportBudgetItem(models.Model):
                     ('move_id.state', '=', 'posted')
                 ]
 
+                # Usamos read_group para eficiencia
                 aml_data = self.env['account.move.line'].read_group(
                     domain, ['balance'], ['account_id']
                 )
 
                 # 3. Tratamiento del Saldo
-                # Usamos abs() para que tanto ingresos como gastos se traten como valores positivos base
+                # Odoo devuelve saldo negativo para ingresos.
+                # Si quieres que ingresos sean positivos, asegúrate de la lógica de signo:
                 raw_balance = aml_data[0]['balance'] if aml_data else 0.0
-                total_last_year = abs(raw_balance)
+                record.last_year_balance = raw_balance
 
-                record.last_year_balance = total_last_year
-
-                # 4. Cálculo del nuevo importe
-                # (Saldo * (1 + %/100)) es lo mismo que Saldo + (Saldo * %)
-                if record.percentage_adj:
-                    nuevo_importe = total_last_year * (1 + (record.percentage_adj / 100.0))
-                else:
-                    nuevo_importe = total_last_year
-
-                record.amount = nuevo_importe
+                # 4. Cálculo del nuevo importe (El "Doble" si es 100%)
+                # Si percentage_adj es 100, la fórmula es: 8214 * (1 + 100/100) = 8214 * 2
+                factor = 1 + (record.percentage_adj / 100.0)
+                record.amount = total_last_year * factor
             else:
                 record.last_year_balance = 0.0
                 record.amount = 0.0
+
 # from odoo import models, fields, api
 # from datetime import date
 #
@@ -99,7 +101,7 @@ class AccountReportBudgetItem(models.Model):
 #                 raw_balance = aml_data[0]['balance'] if aml_data else 0.0
 #
 #                 # Invertimos el signo para que coincida con la lógica de presupuesto (Ingresos = Positivo)
-#                 total_last_year = 1 * raw_balance
+#                 total_last_year = raw_balance
 #                 record.last_year_balance = total_last_year
 #
 #                 # 4. Cálculo del nuevo importe: Saldo Anterior + (Saldo Anterior * %)
