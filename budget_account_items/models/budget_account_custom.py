@@ -41,7 +41,7 @@ class AccountReportBudgetItem(models.Model):
                 raw_balance = aml_data[0]['balance'] if aml_data else 0.0
 
                 # Invertimos el signo para que coincida con la lógica de presupuesto (Ingresos = Positivo)
-                total_last_year = -1 * raw_balance
+                total_last_year = 1 * raw_balance
                 record.last_year_balance = total_last_year
 
                 # 4. Cálculo del nuevo importe: Saldo Anterior + (Saldo Anterior * %)
