@@ -21,29 +21,47 @@ class AccountReportBudgetItem(models.Model):
         store=False  # Al ser False, no se guarda en la BD
     )
 
+    amount = fields.Float(
+        string="Importe",
+        compute="_compute_budget_logic",
+        store=True,
+        readonly=False  # Permite edición manual si lo prefieres
+    )
+
     amouunt_ui = fields.Float(
         string='Importe',
         compute="_compute_importe_ui",
+        inverse="_inverse_importe_ui",  # Permite que lo que escribas se guarde
         store=False,
-        digits=(16, 2)  # Forzamos la precisión decimal
+        readonly=False,
+        digits=(16, 2)
     )
+
+    def _inverse_importe_ui(self):
+        for record in self:
+            # Si escribes 1230 en la UI, guardamos -1230 en amount
+            record.amount = record.amouunt_ui * -1
+
+    @api.onchange('amouunt_ui')
+    def _onchange_amouunt_ui(self):
+        # Primero actualizamos el valor real para el cálculo
+        real_amount = self.amouunt_ui * -1
+        self.amount = real_amount
+
+        # Calculamos el porcentaje igual que antes
+        if self.last_year_balance and self.last_year_balance != 0:
+            # Importante: Usamos el signo real para el cálculo matemático
+            self.percentage_adj = (real_amount / self.last_year_balance) - 1
 
     @api.depends('amount')
     def _compute_importe_ui(self):
         for record in self:
-            # 1. Verificamos si es cero con la precisión de la contabilidad
-            # Esto detecta si el valor es 0.0000001 o -0.0000001
             if float_is_zero(record.amount, precision_digits=2):
                 record.amouunt_ui = 0.0
             else:
-                # 2. Invertimos y redondeamos a 2 decimales inmediatamente
-                inverted_value = round(record.amount * -1, 2)
-
-                # 3. Doble check: si tras redondear dio -0.0 o 0.0, forzamos 0.0
-                if inverted_value == -0.0 or inverted_value == 0.0:
-                    record.amouunt_ui = 0.0
-                else:
-                    record.amouunt_ui = inverted_value
+                inverted = round(record.amount * -1, 2)
+                # Limpieza de signo para el cero
+                record.amouunt_ui = 0.0 if inverted == -0.0 else inverted
 
     @api.depends('last_year_balance')
     def _compute_balance_ui(self):
@@ -52,12 +70,6 @@ class AccountReportBudgetItem(models.Model):
             record.last_year_balance_ui = record.last_year_balance * -1
 
     # Redefinimos amount para que dependa de nuestra lógica
-    amount = fields.Float(
-        string="Importe",
-        compute="_compute_budget_logic",
-        store=True,
-        readonly=False  # Permite edición manual si lo prefieres
-    )
 
     percentage_adj = fields.Float(string="% Incremento", default=0.0)
 
@@ -102,7 +114,6 @@ class AccountReportBudgetItem(models.Model):
     @api.onchange('amount')
     def _onchange_amount(self):
         if self.last_year_balance and self.last_year_balance != 0:
-            # (1230 / 820) - 1 = 0.5 (50%)
             self.percentage_adj = (self.amount / self.last_year_balance) - 1
 
 # from odoo import models, fields, api
