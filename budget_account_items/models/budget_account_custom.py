@@ -27,6 +27,8 @@ class AccountReportBudgetItem(models.Model):
     @api.depends('amount')
     def _compute_importe_ui(self):
         for record in self:
+            if record.amount == 0.0:
+                record.amouunt_ui = 0.0
             # Invertimos el signo: si es -5 muestra 5, si es 5 muestra -5
             record.amouunt_ui = record.amount * -1
 
