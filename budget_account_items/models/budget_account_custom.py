@@ -1,6 +1,8 @@
 from odoo import models, fields, api
 from datetime import date
 
+from odoo.tools import float_is_zero
+
 
 class AccountReportBudgetItem(models.Model):
     _inherit = 'account.report.budget.item'
@@ -20,20 +22,28 @@ class AccountReportBudgetItem(models.Model):
     )
 
     amouunt_ui = fields.Float(
-        string='Importe Presupuesto',  # Un nombre claro para la interfaz
+        string='Importe',
         compute="_compute_importe_ui",
-        store=False
+        store=False,
+        digits=(16, 2)  # Forzamos la precisión decimal
     )
 
     @api.depends('amount')
     def _compute_importe_ui(self):
         for record in self:
-            # Usamos un if/else claro para evitar la doble asignación
-            if not record.amount or record.amount == 0:
+            # 1. Verificamos si es cero con la precisión de la contabilidad
+            # Esto detecta si el valor es 0.0000001 o -0.0000001
+            if float_is_zero(record.amount, precision_digits=2):
                 record.amouunt_ui = 0.0
             else:
-                # Invertimos el signo solo si el valor no es cero
-                record.amouunt_ui = record.amount * -1
+                # 2. Invertimos y redondeamos a 2 decimales inmediatamente
+                inverted_value = round(record.amount * -1, 2)
+
+                # 3. Doble check: si tras redondear dio -0.0 o 0.0, forzamos 0.0
+                if inverted_value == -0.0 or inverted_value == 0.0:
+                    record.amouunt_ui = 0.0
+                else:
+                    record.amouunt_ui = inverted_value
 
     @api.depends('last_year_balance')
     def _compute_balance_ui(self):
