@@ -19,18 +19,21 @@ class AccountReportBudgetItem(models.Model):
         store=False  # Al ser False, no se guarda en la BD
     )
 
-    amouunt_ui = fields.Text(string='Importe',
-            compute = "_compute_importe_ui",
-            store = False
+    amouunt_ui = fields.Float(
+        string='Importe Presupuesto',  # Un nombre claro para la interfaz
+        compute="_compute_importe_ui",
+        store=False
     )
 
     @api.depends('amount')
     def _compute_importe_ui(self):
         for record in self:
-            if record.amount == 0.0:
+            # Usamos un if/else claro para evitar la doble asignación
+            if not record.amount or record.amount == 0:
                 record.amouunt_ui = 0.0
-            # Invertimos el signo: si es -5 muestra 5, si es 5 muestra -5
-            record.amouunt_ui = record.amount * -1
+            else:
+                # Invertimos el signo solo si el valor no es cero
+                record.amouunt_ui = record.amount * -1
 
     @api.depends('last_year_balance')
     def _compute_balance_ui(self):
