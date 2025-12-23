@@ -12,6 +12,30 @@ class AccountReportBudgetItem(models.Model):
         digits=(16, 2)
     )
 
+    # Nuevo campo solo para la VISTA (Front-end)
+    last_year_balance_ui = fields.Float(
+        string="Saldo Año Ant.",
+        compute="_compute_balance_ui",
+        store=False  # Al ser False, no se guarda en la BD
+    )
+
+    amouunt_ui = fields.Text(string='Importe',
+            compute = "_compute_importe_ui",
+            store = False
+    )
+
+    @api.depends('amount')
+    def _compute_importe_ui(self):
+        for record in self:
+            # Invertimos el signo: si es -5 muestra 5, si es 5 muestra -5
+            record.amouunt_ui = record.amount * -1
+
+    @api.depends('last_year_balance')
+    def _compute_balance_ui(self):
+        for record in self:
+            # Invertimos el signo: si es -5 muestra 5, si es 5 muestra -5
+            record.last_year_balance_ui = record.last_year_balance * -1
+
     # Redefinimos amount para que dependa de nuestra lógica
     amount = fields.Float(
         string="Importe",
