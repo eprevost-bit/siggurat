@@ -19,34 +19,34 @@ class EmplacementRevenueReport(models.Model):
         self.env.cr.execute("""
             CREATE OR REPLACE VIEW %s AS (
                 SELECT
-                    -- Generamos un ID único combinando IDs para la vista
                     row_number() OVER() AS id,
-
                     s.id AS sale_id,
                     e.id AS emplacement_id,
                     e.state_id AS state_id,
                     s.currency_id AS currency_id,
-
-                    -- AQUÍ ESTÁ EL TRUCO DEL INGRESO
-                    -- Nota: Si una venta tiene 2 emplazamientos, ¿el ingreso se duplica o se divide?
-                    -- En este ejemplo, mostramos el total de la venta asociado al emplazamiento.
-                    s.amount_total AS revenue
-
+                    s.amount_total AS revenue,
+                    s.company_id AS company_id
                 FROM
                     sale_order s
-                -- Unimos con la tabla intermedia del Many2many
-                -- OJO: Verifica el nombre exacto de la tabla de relación en tu base de datos.
-                -- Por defecto suele ser 'nombre_modelo_origen_nombre_modelo_destino_rel' 
-                -- o el nombre especificado en el campo many2many.
-                -- Asumiré que el campo es 'ad_space_id' en sale.order:
+
+                -- 1. Unimos Venta con la tabla intermedia (Many2many)
+                -- IMPORTANTE: Verifica que este nombre 'sale_order_mp_site_ad_space_rel' sea el correcto
+                -- Mirando el campo 'Relation' en la configuración del campo ad_space_id
                 JOIN
-                    sale_order_mp_site_emplacement_rel rel ON s.id = rel.sale_order_id
+                    sale_order_mp_site_ad_space_rel rel ON s.id = rel.sale_order_id
+
+                -- 2. Unimos la intermedia con el Espacio Publicitario (mp.site.ad.space)
+                -- Verifica si la columna se llama 'mp_site_ad_space_id' o 'ad_space_id' en la tabla rel
                 JOIN
-                    mp_site_emplacement e ON rel.mp_site_emplacement_id = e.id
+                    mp_site_ad_space ads ON rel.mp_site_ad_space_id = ads.id
+
+                -- 3. Unimos el Espacio con el Emplazamiento (mp.site.emplacement)
+                -- Asumo que el mp.site.ad.space tiene un campo 'emplacement_id' o similar
+                JOIN
+                    mp_site_emplacement e ON ads.mp_site_emplacement_id = e.id
 
                 WHERE
-                    -- Condiciones que pediste:
-                    s.state IN ('sale', 'done')  -- Ventas confirmadas
-                    AND s.subscription_state = '3_progress' -- En proceso
+                    s.state IN ('sale', 'done')
+                    AND s.subscription_state = '3_progress'
             )
         """ % self._table)
