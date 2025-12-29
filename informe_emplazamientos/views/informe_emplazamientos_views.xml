@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_mp_emplacement_revenue_search" model="ir.ui.view">
+        <field name="name">mp.emplacement.revenue.search</field>
+        <field name="model">mp.emplacement.revenue.report</field>
+        <field name="arch" type="xml">
+            <search string="Análisis de Ingresos">
+                <field name="emplacement_id"/>
+                <field name="state_id"/>
+                <field name="sale_id"/>
+
+                <separator/>
+
+                <group expand="1" string="Agrupar Por">
+                    <filter name="groupby_state" string="Provincia" context="{'group_by': 'state_id'}"/>
+                    <filter name="groupby_emplacement" string="Emplazamiento" context="{'group_by': 'emplacement_id'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="view_mp_emplacement_revenue_pivot" model="ir.ui.view">
+        <field name="name">mp.emplacement.revenue.pivot</field>
+        <field name="model">mp.emplacement.revenue.report</field>
+        <field name="arch" type="xml">
+            <pivot string="Ingresos por Emplazamiento" display_quantity="true">
+                <field name="state_id" type="row"/>
+                <field name="emplacement_id" type="row"/>
+                <field name="revenue" type="measure"/>
+            </pivot>
+        </field>
+    </record>
+
+    <record id="view_mp_emplacement_revenue_tree" model="ir.ui.view">
+        <field name="name">mp.emplacement.revenue.tree</field>
+        <field name="model">mp.emplacement.revenue.report</field>
+        <field name="arch" type="xml">
+            <list string="Detalle de Ingresos">
+                <field name="sale_id"/>
+                <field name="emplacement_id"/>
+                <field name="state_id"/>
+                <field name="revenue" sum="Total Ingresos"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="action_mp_emplacement_revenue_report" model="ir.actions.act_window">
+        <field name="name">Informe: Ingresos por Emplazamiento</field>
+        <field name="res_model">mp.emplacement.revenue.report</field>
+        <field name="view_mode">pivot,graph,list</field>
+        <field name="context">{'search_default_groupby_state': 1}</field> </record>
+
+    <menuitem id="menu_mp_emplacement_revenue_report"
+              name="Informe de Ingresos"
+              parent="sale.menu_sale_report"
+              action="action_mp_emplacement_revenue_report"
+              sequence="50"/>
+</odoo>

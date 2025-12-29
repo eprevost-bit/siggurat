@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_sale_description_update_wizard_form" model="ir.ui.view">
+        <field name="name">sale.description.update.wizard.form</field>
+        <field name="model">sale.description.update.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Actualizar Descripciones">
+                <p>¿Desea actualizar la descripción de todas las líneas basándose en la información del espacio
+                    publicitario?</p>
+                <footer>
+                    <button name="action_confirm" string="Actualizar ahora" type="object" class="btn-primary"/>
+                    <button string="Cancelar" class="btn-secondary" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    # Acción para que aparezca en el botón "Acciones" de la lista y el formulario
+    <record id="action_update_sale_line_descriptions" model="ir.actions.act_window">
+        <field name="name">Formatear Descripciones (Sitios)</field>
+        <field name="res_model">sale.description.update.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+        <field name="binding_model_id" ref="sale.model_sale_order"/>
+        <field name="binding_view_types">form,list</field>
+    </record>
+</odoo>
