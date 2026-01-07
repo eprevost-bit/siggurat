@@ -142,7 +142,7 @@ class AccountReportBudgetItem(models.Model):
         string='Importe',
         compute="_compute_importe_ui",
         inverse="_inverse_importe_ui",  # Permite que lo que escribas se guarde
-        store=False,
+        store=True,
         readonly=False,
         digits=(16, 2)
     )
@@ -198,40 +198,73 @@ class AccountReportBudgetItem(models.Model):
     @api.depends('account_id', 'date', 'percentage_adj')
     def _compute_budget_logic(self):
         for record in self:
+            # CAMBIO CLAVE: Solo buscamos en contabilidad si last_year_balance es 0.
+            # Si ya tiene valor (por la duplicación), respetamos ese valor.
             if record.account_id and record.date:
-                # 1. Obtener el rango del año anterior
-                last_year = record.date.year - 1
-                date_from = date(last_year, 1, 1)
-                date_to = date(last_year, 12, 31)
+                if float_is_zero(record.last_year_balance, precision_digits=2):
+                    last_year = record.date.year - 1
+                    date_from = date(last_year, 1, 1)
+                    date_to = date(last_year, 12, 31)
 
-                # 2. Búsqueda de apuntes contables
-                domain = [
-                    ('account_id', '=', record.account_id.id),
-                    ('date', '>=', date_from),
-                    ('date', '<=', date_to),
-                    ('move_id.state', '=', 'posted')
-                ]
+                    domain = [
+                        ('account_id', '=', record.account_id.id),
+                        ('date', '>=', date_from),
+                        ('date', '<=', date_to),
+                        ('move_id.state', '=', 'posted')
+                    ]
 
-                # Usamos read_group para eficiencia
-                aml_data = self.env['account.move.line'].read_group(
-                    domain, ['balance'], ['account_id']
-                )
+                    aml_data = self.env['account.move.line'].read_group(
+                        domain, ['balance'], ['account_id']
+                    )
 
-                # 3. Tratamiento del Saldo
-                # Odoo devuelve saldo negativo para ingresos.
-                # Si quieres que ingresos sean positivos, asegúrate de la lógica de signo:
-                raw_balance = aml_data[0]['balance'] if aml_data else 0.0
+                    raw_balance = aml_data[0]['balance'] if aml_data else 0.0
+                    record.last_year_balance = raw_balance
 
-                # Para presupuestos de ingresos, solemos invertir el signo
-                total_last_year = raw_balance
-                record.last_year_balance = total_last_year
-
+                # El cálculo del importe siempre se basa en el last_year_balance que tengamos
+                total_last_year = record.last_year_balance
                 incremento = total_last_year * record.percentage_adj
                 record.amount = total_last_year + incremento
 
             else:
                 record.last_year_balance = 0.0
                 record.amount = 0.0
+    # @api.depends('account_id', 'date', 'percentage_adj')
+    # def _compute_budget_logic(self):
+    #     for record in self:
+    #         if record.account_id and record.date:
+    #             # 1. Obtener el rango del año anterior
+    #             last_year = record.date.year - 1
+    #             date_from = date(last_year, 1, 1)
+    #             date_to = date(last_year, 12, 31)
+    #
+    #             # 2. Búsqueda de apuntes contables
+    #             domain = [
+    #                 ('account_id', '=', record.account_id.id),
+    #                 ('date', '>=', date_from),
+    #                 ('date', '<=', date_to),
+    #                 ('move_id.state', '=', 'posted')
+    #             ]
+    #
+    #             # Usamos read_group para eficiencia
+    #             aml_data = self.env['account.move.line'].read_group(
+    #                 domain, ['balance'], ['account_id']
+    #             )
+    #
+    #             # 3. Tratamiento del Saldo
+    #             # Odoo devuelve saldo negativo para ingresos.
+    #             # Si quieres que ingresos sean positivos, asegúrate de la lógica de signo:
+    #             raw_balance = aml_data[0]['balance'] if aml_data else 0.0
+    #
+    #             # Para presupuestos de ingresos, solemos invertir el signo
+    #             total_last_year = raw_balance
+    #             record.last_year_balance = total_last_year
+    #
+    #             incremento = total_last_year * record.percentage_adj
+    #             record.amount = total_last_year + incremento
+    #
+    #         else:
+    #             record.last_year_balance = 0.0
+    #             record.amount = 0.0
 
     @api.onchange('amount')
     def _onchange_amount(self):
