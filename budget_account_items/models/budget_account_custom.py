@@ -114,22 +114,20 @@ class AccountReportBudget(models.Model):
     _inherit = 'account.report.budget'
 
     def action_proyectar_presupuesto(self):
+        """
+        Botón para el Header: Duplica el presupuesto completo
+        y proyecta los importes de todas las líneas.
+        """
         self.ensure_one()
-        # 1. Duplicamos el presupuesto (cabecera)
+        # Creamos la copia de la cabecera
         nuevo_presupuesto = self.copy({
             'name': self.name + " (Proyectado)",
-            'item_ids': [], # Vaciamos las líneas para crearlas con nuestra lógica
+            'item_ids': [], # Limpiamos líneas para procesarlas una a una
         })
 
-        # 2. Creamos las líneas proyectadas
         for linea in self.item_ids:
-            linea.copy({
-                'budget_id': nuevo_presupuesto.id,
-                'last_year_balance': linea.amount, # El importe actual es el saldo anterior del nuevo
-                'percentage_adj': 0.0,             # Empezamos desde cero
-            })
+            linea.copy({'budget_id': nuevo_presupuesto.id})
 
-        # 3. Abrimos el nuevo presupuesto
         return {
             'type': 'ir.actions.act_window',
             'res_model': 'account.report.budget',
