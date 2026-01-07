@@ -220,7 +220,6 @@ class AccountReportBudgetItem(models.Model):
                     raw_balance = aml_data[0]['balance'] if aml_data else 0.0
                     record.last_year_balance = raw_balance
 
-                # El cálculo del importe siempre se basa en el last_year_balance que tengamos
                 total_last_year = record.last_year_balance
                 incremento = total_last_year * record.percentage_adj
                 record.amount = total_last_year + incremento
