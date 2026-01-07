@@ -18,7 +18,8 @@ class AccountReportBudgetItem(models.Model):
     last_year_balance_ui = fields.Float(
         string="Saldo Año Ant.",
         compute="_compute_balance_ui",
-        store=False  # Al ser False, no se guarda en la BD
+        store=True,  # Se guarda en la BD
+        copy=True  # Permite que Odoo copie el valor al duplicar
     )
 
     amount = fields.Float(
