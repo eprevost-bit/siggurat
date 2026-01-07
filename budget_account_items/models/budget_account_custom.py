@@ -147,11 +147,10 @@ class AccountReportBudgetItem(models.Model):
         digits=(16, 2)
     )
 
-    @api.model
     def copy(self, default=None):
         default = default or {}
         # Al duplicar, queremos que el 'importe' del viejo sea el 'saldo anterior' del nuevo
-        default['last_year_balance'] = self.amouunt_ui
+        default['last_year_balance'] = self.amount
         # Reseteamos el incremento para que el usuario empiece de cero sobre la nueva base
         default['percentage_adj'] = 0.0
         return super(AccountReportBudgetItem, self).copy(default)
