@@ -230,7 +230,7 @@ class AccountReportBudgetItem(models.Model):
             else:
                 record.last_year_balance = 0.0
                 record.amount = 0.0
-    @api.model
+
     def action_proyectar_presupuesto(self):
         self.ensure_one()
 
