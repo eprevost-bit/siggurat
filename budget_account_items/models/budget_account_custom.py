@@ -176,11 +176,12 @@ class AccountReportBudgetItem(models.Model):
 
     def copy(self, default=None):
         default = default or {}
-        # Al duplicar, queremos que el 'importe' del viejo sea el 'saldo anterior' del nuevo
+        # Forzamos que el nuevo saldo sea el importe actual
         default['last_year_balance'] = self.amount
-        # Reseteamos el incremento para que el usuario empiece de cero sobre la nueva base
         default['percentage_adj'] = 0.0
-        return super(AccountReportBudgetItem, self).copy(default)
+
+        # Pasamos una clave en el contexto para que el compute no lo sobrescriba
+        return super(AccountReportBudgetItem, self.with_context(is_projection=True)).copy(default)
 
     def _inverse_balance_ui(self):
         for record in self:
@@ -222,66 +223,67 @@ class AccountReportBudgetItem(models.Model):
 
     percentage_adj = fields.Float(string="% Incremento", default=0.0)
 
-    @api.depends('account_id', 'date', 'percentage_adj')
+    @api.depends('account_id', 'date', 'percentage_adj', 'last_year_balance')
     def _compute_budget_logic(self):
         for record in self:
-            if not float_is_zero(record.last_year_balance, precision_digits=2):
-                incremento = record.last_year_balance * record.percentage_adj
-                record.amount = record.last_year_balance + incremento
+            # SI EL SALDO YA TIENE VALOR Y NO ES CERO, O SI ESTAMOS PROYECTANDO:
+            # Respetamos el valor y solo calculamos el importe final.
+            if not float_is_zero(record.last_year_balance, precision_digits=2) or self.env.context.get('is_projection'):
+                record.amount = record.last_year_balance + (record.last_year_balance * record.percentage_adj)
                 continue
 
+            # BÚSQUEDA CONTABLE (Solo si el campo está vacío y no es una proyección)
             if record.account_id and record.date:
-                if float_is_zero(record.last_year_balance, precision_digits=2):
-                    last_year = record.date.year - 1
-                    date_from = date(last_year, 1, 1)
-                    date_to = date(last_year, 12, 31)
+                last_year = record.date.year - 1
+                domain = [
+                    ('account_id', '=', record.account_id.id),
+                    ('date', '>=', date(last_year, 1, 1)),
+                    ('date', '<=', date(last_year, 12, 31)),
+                    ('move_id.state', '=', 'posted')
+                ]
+                aml_data = self.env['account.move.line'].read_group(domain, ['balance'], ['account_id'])
+                saldo = aml_data[0]['balance'] if aml_data else 0.0
 
-                    domain = [
-                        ('account_id', '=', record.account_id.id),
-                        ('date', '>=', date_from),
-                        ('date', '<=', date_to),
-                        ('move_id.state', '=', 'posted')
-                    ]
-
-                    aml_data = self.env['account.move.line'].read_group(
-                        domain, ['balance'], ['account_id']
-                    )
-
-                    raw_balance = aml_data[0]['balance'] if aml_data else 0.0
-                    record.last_year_balance = raw_balance
-
-                total_last_year = record.last_year_balance
-                incremento = total_last_year * record.percentage_adj
-                record.amount = total_last_year + incremento
-
+                record.last_year_balance = saldo
+                record.amount = saldo + (saldo * record.percentage_adj)
             else:
                 record.last_year_balance = 0.0
                 record.amount = 0.0
-
-    def action_proyectar_presupuesto(self):
-        self.ensure_one()
-
-        # Preparamos los valores para el nuevo registro
-        # Queremos que el 'Importe' (amount) actual pase a ser el 'Saldo Anterior'
-        vals = {
-            'account_id': self.account_id.id,
-            'date': self.date,  # O podrías sumar un año: self.date + relativedelta(years=1)
-            'last_year_balance': self.amount,  # Aquí pasamos el valor que quieres (1200)
-            'percentage_adj': 0.0,  # Empezamos sin incremento
-            'amount': self.amount,  # El importe inicial será igual al saldo anterior
-        }
-
-        # Creamos el nuevo registro
-        nuevo_presupuesto = self.create(vals)
-
-        # Devolvemos una acción para abrir el nuevo registro inmediatamente
-        return {
-            'type': 'ir.actions.act_window',
-            'res_model': 'account.report.budget.item',
-            'view_mode': 'form',
-            'res_id': nuevo_presupuesto.id,
-            'target': 'current',
-        }
+    # @api.depends('account_id', 'date', 'percentage_adj')
+    # def _compute_budget_logic(self):
+    #     for record in self:
+    #         if not float_is_zero(record.last_year_balance, precision_digits=2):
+    #             incremento = record.last_year_balance * record.percentage_adj
+    #             record.amount = record.last_year_balance + incremento
+    #             continue
+    #
+    #         if record.account_id and record.date:
+    #             if float_is_zero(record.last_year_balance, precision_digits=2):
+    #                 last_year = record.date.year - 1
+    #                 date_from = date(last_year, 1, 1)
+    #                 date_to = date(last_year, 12, 31)
+    #
+    #                 domain = [
+    #                     ('account_id', '=', record.account_id.id),
+    #                     ('date', '>=', date_from),
+    #                     ('date', '<=', date_to),
+    #                     ('move_id.state', '=', 'posted')
+    #                 ]
+    #
+    #                 aml_data = self.env['account.move.line'].read_group(
+    #                     domain, ['balance'], ['account_id']
+    #                 )
+    #
+    #                 raw_balance = aml_data[0]['balance'] if aml_data else 0.0
+    #                 record.last_year_balance = raw_balance
+    #
+    #             total_last_year = record.last_year_balance
+    #             incremento = total_last_year * record.percentage_adj
+    #             record.amount = total_last_year + incremento
+    #
+    #         else:
+    #             record.last_year_balance = 0.0
+    #             record.amount = 0.0
 
 
     @api.onchange('amount')
