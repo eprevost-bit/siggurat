@@ -5,6 +5,12 @@
         <field name="model">account.report.budget</field>
         <field name="inherit_id" ref="account_reports.account_report_budget_form"/>
         <field name="arch" type="xml">
+            <header>
+                <button name="action_proyectar_presupuesto"
+                        string="Duplicar"
+                        type="object"
+                        class="oe_highlight"/>
+            </header>
 
             <xpath expr="//field[@name='item_ids']/list" position="attributes">
                 <attribute name="editable">bottom</attribute>

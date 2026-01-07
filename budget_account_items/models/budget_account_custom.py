@@ -198,8 +198,11 @@ class AccountReportBudgetItem(models.Model):
     @api.depends('account_id', 'date', 'percentage_adj')
     def _compute_budget_logic(self):
         for record in self:
-            # CAMBIO CLAVE: Solo buscamos en contabilidad si last_year_balance es 0.
-            # Si ya tiene valor (por la duplicación), respetamos ese valor.
+            if not float_is_zero(record.last_year_balance, precision_digits=2):
+                incremento = record.last_year_balance * record.percentage_adj
+                record.amount = record.last_year_balance + incremento
+                continue
+
             if record.account_id and record.date:
                 if float_is_zero(record.last_year_balance, precision_digits=2):
                     last_year = record.date.year - 1
@@ -227,6 +230,32 @@ class AccountReportBudgetItem(models.Model):
             else:
                 record.last_year_balance = 0.0
                 record.amount = 0.0
+
+    def action_proyectar_presupuesto(self):
+        self.ensure_one()
+
+        # Preparamos los valores para el nuevo registro
+        # Queremos que el 'Importe' (amount) actual pase a ser el 'Saldo Anterior'
+        vals = {
+            'account_id': self.account_id.id,
+            'date': self.date,  # O podrías sumar un año: self.date + relativedelta(years=1)
+            'last_year_balance': self.amount,  # Aquí pasamos el valor que quieres (1200)
+            'percentage_adj': 0.0,  # Empezamos sin incremento
+            'amount': self.amount,  # El importe inicial será igual al saldo anterior
+        }
+
+        # Creamos el nuevo registro
+        nuevo_presupuesto = self.create(vals)
+
+        # Devolvemos una acción para abrir el nuevo registro inmediatamente
+        return {
+            'type': 'ir.actions.act_window',
+            'res_model': 'account.report.budget.item',
+            'view_mode': 'form',
+            'res_id': nuevo_presupuesto.id,
+            'target': 'current',
+        }
+
     # @api.depends('account_id', 'date', 'percentage_adj')
     # def _compute_budget_logic(self):
     #     for record in self:
