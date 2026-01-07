@@ -11,6 +11,7 @@ class AccountReportBudgetItem(models.Model):
         string="Saldo Año Anterior",
         compute="_compute_budget_logic",
         store=True,
+        copy=True,
         digits=(16, 2)
     )
 
@@ -18,8 +19,9 @@ class AccountReportBudgetItem(models.Model):
     last_year_balance_ui = fields.Float(
         string="Saldo Año Ant.",
         compute="_compute_balance_ui",
-        store=True,  # Se guarda en la BD
-        copy=True  # Permite que Odoo copie el valor al duplicar
+        store=True,
+        copy=True,
+        digits = (16, 2)
     )
 
     amount = fields.Float(
